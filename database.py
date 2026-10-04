@@ -4,18 +4,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from config import settings
 
-if os.getenv("VERCEL"):
-    DB_PATH = Path("/tmp/pocketsmart.db")
-else:
-    DB_PATH = Path(__file__).resolve().parent / "pocketsmart.db"
-
-if not os.getenv("VERCEL") and settings.database_url.startswith("sqlite:///"):
+DB_PATH = Path("/tmp/pocketsmart.db") if os.getenv("VERCEL") else Path(__file__).resolve().parent / "pocketsmart.db"
+if settings.database_url.startswith("sqlite:///"):
     raw = settings.database_url.replace("sqlite:///", "", 1)
-    DB_PATH = (
-        (Path(__file__).resolve().parent / raw).resolve()
-        if not Path(raw).is_absolute()
-        else Path(raw)
-    )
+    DB_PATH = (Path(__file__).resolve().parent / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
+
 @contextmanager
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -29,6 +22,7 @@ def get_db():
         raise
     finally:
         conn.close()
+
 
 def init_db():
     with get_db() as db:
@@ -61,43 +55,53 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
         """)
 
+
 def create_user(username, email, password_hash):
     with get_db() as db:
         cur = db.execute("INSERT INTO users(username,email,password_hash) VALUES(?,?,?)", (username, email, password_hash))
         return cur.lastrowid
 
+
 def get_user_by_username(username):
     with get_db() as db:
         return db.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
+
 
 def get_user_by_email(email):
     with get_db() as db:
         return db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
 
+
 def get_user(user_id):
     with get_db() as db:
         return db.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+
 
 def create_session(jti, user_id, expires_at):
     with get_db() as db:
         db.execute("INSERT INTO sessions(jti,user_id,expires_at) VALUES(?,?,?)", (jti, user_id, expires_at))
 
+
 def get_session(jti):
     with get_db() as db:
         return db.execute("SELECT * FROM sessions WHERE jti=?", (jti,)).fetchone()
 
+
 def revoke_session(jti):
     with get_db() as db:
         db.execute("UPDATE sessions SET revoked=1 WHERE jti=?", (jti,))
+
 
 def create_recommendation(user_id, planner_type, input_json, result_json):
     with get_db() as db:
         cur = db.execute("INSERT INTO recommendations(user_id,planner_type,input_json,result_json) VALUES(?,?,?,?)", (user_id, planner_type, input_json, result_json))
         return cur.lastrowid
 
+
 def get_recommendations(user_id, limit=50):
     with get_db() as db:
         return db.execute("SELECT * FROM recommendations WHERE user_id=? ORDER BY created_at DESC LIMIT ?", (user_id, limit)).fetchall()
+
 
 def get_recommendation(user_id, recommendation_id):
     with get_db() as db:
