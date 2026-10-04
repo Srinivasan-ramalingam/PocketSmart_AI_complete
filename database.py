@@ -7,7 +7,7 @@ from config import settings
 TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL", "")
 TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN", "")
 
-USE_TURSO = bool(TURSO_DATABASE_URL and TURSO_AUTH_TOKEN)
+USE_TURSO = bool(os.getenv("TURSO_DATABASE_URL"))
 
 
 @contextmanager
