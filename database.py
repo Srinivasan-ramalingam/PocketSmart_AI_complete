@@ -4,11 +4,18 @@ from contextlib import contextmanager
 from pathlib import Path
 from config import settings
 
-DB_PATH = Path("/tmp/pocketsmart.db") if os.getenv("VERCEL") else Path(__file__).resolve().parent / "pocketsmart.db"
-if settings.database_url.startswith("sqlite:///"):
-    raw = settings.database_url.replace("sqlite:///", "", 1)
-    DB_PATH = (Path(__file__).resolve().parent / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
+if os.getenv("VERCEL"):
+    DB_PATH = Path("/tmp/pocketsmart.db")
+else:
+    DB_PATH = Path(__file__).resolve().parent / "pocketsmart.db"
 
+if not os.getenv("VERCEL") and settings.database_url.startswith("sqlite:///"):
+    raw = settings.database_url.replace("sqlite:///", "", 1)
+    DB_PATH = (
+        (Path(__file__).resolve().parent / raw).resolve()
+        if not Path(raw).is_absolute()
+        else Path(raw)
+    )
 @contextmanager
 def get_db():
     conn = sqlite3.connect(DB_PATH)
