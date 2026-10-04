@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from config import settings
 
-DB_PATH = Path(__file__).resolve().parent / "pocketsmart.db"
+DB_PATH = Path("/tmp/pocketsmart.db") if os.getenv("VERCEL") else Path(__file__).resolve().parent / "pocketsmart.db"
 if settings.database_url.startswith("sqlite:///"):
     raw = settings.database_url.replace("sqlite:///", "", 1)
     DB_PATH = (Path(__file__).resolve().parent / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
