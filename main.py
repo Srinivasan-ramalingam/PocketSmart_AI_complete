@@ -1,4 +1,5 @@
 import json
+import os
 import mimetypes
 import uuid
 from datetime import datetime, timezone
@@ -17,7 +18,7 @@ from schemas import RegisterInput, LoginInput, HomeInput, PartyInput, JewelryInp
 from gemini_utils import generate_home, generate_party, generate_jewelry
 
 BASE=Path(__file__).resolve().parent
-UPLOAD_DIR=BASE/"static"/"uploads"
+UPLOAD_DIR = Path("/tmp/pocketsmart_uploads") if os.getenv("VERCEL") else BASE / "static" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 app=FastAPI(title="PocketSmart AI", version="1.0.0")
 app.mount("/static", StaticFiles(directory=BASE/"static"), name="static")
